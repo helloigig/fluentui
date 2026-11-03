@@ -1,18 +1,17 @@
-# @fluentui/react-timepicker-preview Spec
+# TimePicker — Headless Spec
 
 ## Background
 
-`TimePicker` lets a user pick a time of day from a list of predefined options, or, in its freeform variant, type a custom time. It is built on top of the v9 `Combobox`, so it shares Combobox's structure, keyboard interaction and accessibility semantics.
+`TimePicker` lets a user pick a time of day from a list of predefined options, or, in its freeform variant, type a custom time. It is built on top of the headless `Combobox`, so it shares Combobox's structure, keyboard interaction and accessibility semantics, and like every headless component it ships no styles, design props or default icons.
 
-This package is a preview. Its API can change before a stable v9 TimePicker is released and it must not be used in production.
+It is exported from `@fluentui/react-headless-components-preview/time-picker`. The package is a preview: its API can change and it must not be used in production.
 
-It replaces [`@fluentui/react-timepicker-compat`](../../../react-timepicker-compat/library/docs/Spec.md). The compat component kept most of the v8 API surface; this package keeps the same behavior but follows v9 conventions:
+It replaces [`@fluentui/react-timepicker-compat`](../../../react-timepicker-compat/library/docs/Spec.md). The compat component kept most of the v8 API surface; the headless TimePicker keeps the same behavior but follows v9 conventions:
 
 - the value uses the `value` / `defaultValue` / `onChange` convention of v9 form controls: `value` is a `Date | null`, the display text is derived from it, and `onChange` fires on a change, not on every keystroke;
 - callbacks use the v9 `EventHandler<Data>` signature;
-- a design-free `useTimePickerBase_unstable` hook is exported so the component can be composed by `@fluentui/react-headless-components-preview`;
 - time formatting and parsing utilities are part of the public API;
-- state is never mutated after it is created by Combobox hooks; behavior is composed through merged callbacks and refs.
+- state is never mutated after it is created by the Combobox hook; behavior is composed through merged callbacks and refs.
 
 ## Glossary
 
@@ -60,9 +59,9 @@ _Avoid_: time range, window.
 
 ```tsx
 import * as React from 'react';
-import { Field } from '@fluentui/react-components';
-import { TimePicker } from '@fluentui/react-timepicker-preview';
-import type { TimePickerOnChangeData } from '@fluentui/react-timepicker-preview';
+import { Field } from '@fluentui/react-headless-components-preview/field';
+import { TimePicker } from '@fluentui/react-headless-components-preview/time-picker';
+import type { TimePickerOnChangeData } from '@fluentui/react-headless-components-preview/time-picker';
 
 export const Example = () => {
   const [value, setValue] = React.useState<Date | null>(null);
@@ -114,7 +113,7 @@ const [error, setError] = React.useState<string>();
 - **Freeform** (`freeform`): the user can type any time. The typed text is parsed with `parseTimeStringToDate` and committed when it has changed and the user presses <kbd>Enter</kbd> (with no active option) or focus leaves the TimePicker. This mirrors the native `change` event of `<input>`.
 - **Clearable** (`clearable`): renders a clear button that clears the value.
 
-Visual variants (`appearance`, `size`) are the same as Combobox.
+There are no visual variants. The root carries the headless Combobox data attributes (`data-open`, `data-disabled`, `data-placeholder`, `data-invalid`, `data-clearable`) and `data-freeform`, for styling.
 
 ## API
 
@@ -138,7 +137,7 @@ See [TimePicker.types.ts](../src/components/TimePicker/TimePicker.types.ts).
 | `freeform`               | `boolean`                                                   | `false`                               | Allows typing a custom time.                                                                              |
 | `required`               | `boolean`                                                   | `false`                               | Native attribute. Also read from the wrapping `Field`. Makes an empty commit report `required-input`.     |
 
-TimePicker also accepts the Combobox props `appearance`, `clearable`, `defaultOpen`, `open`, `onOpenChange`, `inlinePopup`, `mountNode`, `placeholder`, `positioning` and `size`, plus native `<input>` props. `TimePickerProps` omits the native `value`, `defaultValue` and `onChange` from the input slot props, as Input and SpinButton do, and declares them with the `Date` types above. The display text cannot be controlled; it is always derived as described in "Display text".
+TimePicker also accepts the headless Combobox props `clearable`, `defaultOpen`, `open`, `onOpenChange`, `placeholder` and `positioning`, plus native `<input>` props. `TimePickerProps` omits the native `value`, `defaultValue` and `onChange` from the input slot props, as Input and SpinButton do, and declares them with the `Date` types above. The display text cannot be controlled; it is always derived as described in "Display text".
 
 ### `onChange` data
 
@@ -195,109 +194,68 @@ Same as Combobox: `root`, `input`, `expandIcon`, `clearIcon`, `listbox`.
 
 Formatting and the default parser share the resolved hour cycle: the `hourCycle` prop when set, otherwise the hour cycle of the runtime locale (`new Intl.DateTimeFormat(undefined, { hour: 'numeric' }).resolvedOptions().hourCycle`; `hourCycle` is only resolved when the hour is requested). `formatDateToTimeString` and `getDateFromTimeString` both receive the same `TimeFormatOptions`, so the default formatter and parser always agree on the format.
 
-The default parser (`getDateFromTimeString`) accepts, after trimming leading and trailing whitespace (`:` stands for `:` or the separator the runtime locale puts after the hour, for example `.` in `fi-FI`):
+The default parser (`getDateFromTimeString`) builds its pattern from the parts of the default formatter (`Intl.DateTimeFormat.formatToParts()`), so it accepts the runtime locale's field order, separators, day period and digits. After trimming leading and trailing whitespace, removing bidi marks and mapping localized digits to ASCII (through `Intl.NumberFormat` with the resolved numbering system), it accepts:
 
-| Resolved hour cycle | Accepted input                           | Notes                                                                 |
-| ------------------- | ---------------------------------------- | --------------------------------------------------------------------- |
-| `h23`               | `H:mm`, `HH:mm` with hour `0`–`23`       |                                                                       |
-| `h24`               | `H:mm`, `HH:mm` with hour `1`–`24`       | `24:mm` is hour `0` of the same day, not a rollover to the next day.  |
-| `h12`               | `h:mm AM`, `hh:mm AM` with hour `1`–`12` | Day period is case-insensitive and separated by a single ASCII space. |
-| `h11`               | `h:mm AM`, `hh:mm AM` with hour `0`–`11` | Same as `h12`.                                                        |
+- the hour, then `mm`, then `ss` with `showSeconds`, in the locale's order;
+- between two fields, the locale's separator or `:` (`14.30` and `14:30` in `fi-FI`, `14 h 30` and `14:30` in `fr-CA`);
+- a unit label before the first or after the last field (the trailing ` s` of `fr-CA` with `showSeconds`) as optional, so `14:30:45` and `14 h 30 min 45 s` both parse;
+- in a 12-hour cycle, the locale's day period or `AM`/`PM`, case-insensitive, with U+00A0 and U+202F treated as a space.
 
-With `showSeconds`, `:ss` is required; without it, seconds are rejected. The same separator set applies between the minutes and the seconds. Any other separator, digits outside the cycle's range or a missing day period in a 12-hour cycle produce `invalid-input`.
+| Resolved hour cycle | Hour range | Notes                                                                |
+| ------------------- | ---------- | -------------------------------------------------------------------- |
+| `h23`               | `0`–`23`   |                                                                      |
+| `h24`               | `1`–`24`   | `24:mm` is hour `0` of the same day, not a rollover to the next day. |
+| `h12`               | `1`–`12`   | Day period required.                                                 |
+| `h11`               | `0`–`11`   | Day period required.                                                 |
 
-**Round trip guarantee**: the output of the default `formatDateToTimeString` parses back to the same clock time through the default `getDateFromTimeString` with the same options, for locales whose time format uses ASCII digits, one separator between all fields and either no day period or `AM`/`PM` (for example `en-US`, `en-GB`, `de-DE`, `fr-FR`, `ja-JP`, and `fi-FI`, `da-DK` and `id-ID`, which format `10.10`). The default formatter uses the runtime locale's format, while the default parser only accepts the formats in the table above, so the guarantee does **not** hold for:
+With `showSeconds`, seconds are required; without it, seconds are rejected. Any other separator, digits outside the cycle's range or a missing day period in a 12-hour cycle produce `invalid-input`.
 
-- locales with a different separator before the seconds, for example `fr-CA` with `showSeconds` (`10 h 10 min 10 s`);
-- locales with localized digits, for example `ar-EG` (`١٠:١٠`), `fa-IR`, `mr-IN`, `bn-BD` and `ne-NP`;
-- 12-hour locales with a localized day period, for example `ko-KR` (`오전 10:10`) and `el-GR` (`10:10 π.μ.`).
-
-`hourCycle="h23"` removes the day period and so fixes the last group only; it does not change the separators or the digits. Locales in the first two groups need a custom `parseTimeStringToDate` that accepts the locale's format, or a custom `formatDateToTimeString` that produces the ASCII format.
+**Round trip guarantee**: the output of the default `formatDateToTimeString` parses back to the same clock time through the default `getDateFromTimeString` with the same options in the runtime locale, including locales with localized digits (`ar-EG`, `fa-IR`, `ff-Adlm`), localized day periods (`ja-JP`, `ko-KR`, `es-US`) and unit labels (`fr-CA`).
 
 A parsed time earlier than the start anchor is placed on the day after the anchor (`startHour={22} endHour={2}` with input `1:00` yields 01:00 on the next day). The day is chosen before the clock fields are applied, so a time that does not exist on the anchor day because of a daylight saving transition is not shifted. When a clock time occurs twice because of a daylight saving transition, the earliest occurrence at or after the start anchor wins, so on a fall-back day the first (daylight saving) instant is chosen even when both are inside the range. Formatting and re-parsing therefore preserve the clock fields, not the instant: a value on the second occurrence of a repeated hour displays the same text and parses back to the first occurrence. A time at or after the end anchor is returned with `errorType: 'out-of-bounds'`.
 
 ### Hooks
 
-| Hook                                  | Purpose                                                                                        |
-| ------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| `useTimePicker_unstable`              | Full styled state: design props, default icons, Tabster integration.                           |
-| `useTimePickerBase_unstable`          | Behavior only (no `appearance`/`size`, icons or Tabster), built on `useComboboxBase_unstable`. |
-| `useTimePickerSelection_unstable`     | Resolves time props into options, the value, the display text and Combobox props.              |
-| `useTimePickerComboboxState_unstable` | Applies commit, clear and Field labelling behavior on top of any Combobox state.               |
-| `useTimePickerStyles_unstable`        | Griffel styles.                                                                                |
-| `useTimePickerContextValues_unstable` | Context values for the listbox.                                                                |
-| `renderTimePicker_unstable`           | Renders the state.                                                                             |
+| Export                       | Purpose                                                                              |
+| ---------------------------- | ------------------------------------------------------------------------------------ |
+| `useTimePicker`              | Returns the state from props: headless Combobox state plus the TimePicker behaviors. |
+| `useTimePickerContextValues` | Context values for the listbox.                                                      |
+| `renderTimePicker`           | Renders the state.                                                                   |
 
-`useTimePickerSelection_unstable` and `useTimePickerComboboxState_unstable` let `@fluentui/react-headless-components-preview` compose TimePicker with its own Combobox state hook, which does not use `@fluentui/react-positioning`. Their contracts are public:
-
-```ts
-/** Payload of a change, without the event part of `TimePickerOnChangeData`. */
-type TimePickerCommitData = Pick<TimePickerOnChangeData, 'value' | 'displayValue' | 'errorType'>;
-
-type TimePickerSelection<TComboboxProps> = TimePickerTimeState & {
-  /** Props for the Combobox hook; its `children` are created from `options`. */
-  comboboxProps: TComboboxProps;
-  options: TimePickerOption[];
-  /** Merged into the `clearIcon` slot to tell a clear apart from a commit. */
-  clearIconRef: React.RefObject<HTMLSpanElement | null>;
-  /** Applies a change: updates the value and the display text, then calls `onChange`. */
-  commitValue: (event: TimePickerOnChangeData['event'], data: TimePickerCommitData) => void;
-};
-
-/** The part of a Combobox state the TimePicker behaviors need. */
-type TimePickerComboboxState = Pick<
-  BaseComboboxState,
-  'root' | 'input' | 'listbox' | 'expandIcon' | 'clearIcon' | 'value' | 'getOptionById' | 'activeDescendantController'
->;
-
-/** The part of the Combobox props `useTimePickerSelection_unstable` reads. */
-type TimePickerComboboxProps = Pick<ComboboxProps, 'clearable' | 'freeform' | 'onBlur' | 'onOpenChange'>;
-
-function useTimePickerSelection_unstable<TComboboxProps extends TimePickerComboboxProps>(
-  props: TimePickerTimeProps & Omit<TComboboxProps, 'value' | 'defaultValue' | 'onChange'>,
-): TimePickerSelection<TComboboxProps>;
-function useTimePickerComboboxState_unstable<TState extends TimePickerComboboxState>(
-  comboboxState: TState,
-  selection: TimePickerSelection<unknown>,
-): TState & TimePickerTimeState;
-```
-
-`value`, `defaultValue` and `onChange` are omitted from the Combobox props because TimePicker redefines them: the value is a `Date | null` rather than the display text, and `onChange` reports a time change. Only the TimePicker definitions apply.
+Internally `useTimePicker` resolves the time props into options, the value, the display text and Combobox props, calls the headless `useCombobox`, then applies the commit, clear and Field labelling behaviors on top of the returned state. These steps are not exported.
 
 ## Structure
 
 ```html
-<div class="fui-TimePicker">
-  <input class="fui-TimePicker__input" role="combobox" aria-expanded="true" aria-controls="listbox-id" />
-  <span class="fui-TimePicker__clearIcon" aria-hidden="true"></span>
-  <span class="fui-TimePicker__expandIcon" role="button" aria-label="Open"></span>
-  <!-- rendered in a portal unless inlinePopup -->
-  <div class="fui-TimePicker__listbox" role="listbox" id="listbox-id">
+<div data-freeform="">
+  <input role="combobox" aria-expanded="true" aria-controls="listbox-id" />
+  <span aria-hidden="true"><!-- clearIcon, consumer provided --></span>
+  <span role="button" aria-label="Open"><!-- expandIcon, consumer provided --></span>
+  <!-- rendered while open -->
+  <div role="listbox" id="listbox-id">
     <div role="option" aria-selected="false">9:00 AM</div>
     <div role="option" aria-selected="true">9:30 AM</div>
   </div>
 </div>
 ```
 
-The styled TimePicker applies `useComboboxStyles_unstable` after its own classes, so every slot also carries the matching `fui-Combobox*` class (for example `fui-Combobox fui-TimePicker` on the root), the same as compat.
-
 ## Migration
 
 ### From `@fluentui/react-timepicker-compat`
 
-| Compat                                                   | Preview                                                      |
-| -------------------------------------------------------- | ------------------------------------------------------------ |
-| `selectedTime`                                           | `value`                                                      |
-| `defaultSelectedTime`                                    | `defaultValue`                                               |
-| `value` / `defaultValue` (input text)                    | dropped; the display text is derived from `value`            |
-| `onTimeChange(event, data)`                              | `onChange` (`EventHandler<TimePickerOnChangeData>`)          |
-| `data.selectedTime`, `data.selectedTimeText`             | `data.value`, `data.displayValue`                            |
-| `onChange` (native input event)                          | `onInput`                                                    |
-| `required-input` on every empty commit                   | only when `required` is set on the TimePicker or its `Field` |
-| `TimeSelectionData`                                      | `TimePickerOnChangeData`                                     |
-| `TimeSelectionEvents`                                    | `TimePickerOnChangeData['event']`                            |
-| `formatDateToTimeString: (date) => string`               | `formatDateToTimeString: (date, options) => string`          |
-| `useTimePickerCompatStyles_unstable` (custom style hook) | `useTimePickerStyles_unstable`                               |
+| Compat                                       | Headless                                                     |
+| -------------------------------------------- | ------------------------------------------------------------ |
+| `selectedTime`                               | `value`                                                      |
+| `defaultSelectedTime`                        | `defaultValue`                                               |
+| `value` / `defaultValue` (input text)        | dropped; the display text is derived from `value`            |
+| `onTimeChange(event, data)`                  | `onChange` (`EventHandler<TimePickerOnChangeData>`)          |
+| `data.selectedTime`, `data.selectedTimeText` | `data.value`, `data.displayValue`                            |
+| `onChange` (native input event)              | `onInput`                                                    |
+| `required-input` on every empty commit       | only when `required` is set on the TimePicker or its `Field` |
+| `TimeSelectionData`                          | `TimePickerOnChangeData`                                     |
+| `TimeSelectionEvents`                        | `TimePickerOnChangeData['event']`                            |
+| `formatDateToTimeString: (date) => string`   | `formatDateToTimeString: (date, options) => string`          |
+| `appearance`, `size`, Griffel styles         | dropped; style with `className` and data attributes          |
 
 All other props are unchanged. Compat's documentation asked for a controlled `value` (or `defaultValue`) next to a controlled `selectedTime` (or `defaultSelectedTime`) so the input could show text before the options rendered; after that, Combobox derived the text from the selected option. Here the display text is always derived from `value`, so there is nothing to control.
 
