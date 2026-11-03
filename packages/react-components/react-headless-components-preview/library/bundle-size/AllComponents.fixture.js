@@ -620,6 +620,17 @@ import {
 } from '@fluentui/react-headless-components-preview/teaching-popover';
 import { Textarea, renderTextarea, useTextarea } from '@fluentui/react-headless-components-preview/textarea';
 import {
+  TimePicker,
+  formatDateToTimeString,
+  getDateEndAnchor,
+  getDateFromTimeString,
+  getDateStartAnchor,
+  getTimesBetween,
+  renderTimePicker,
+  useTimePicker,
+  useTimePickerContextValues,
+} from '@fluentui/react-headless-components-preview/time-picker';
+import {
   Toast,
   ToastBody,
   ToastContainer,
@@ -1264,6 +1275,15 @@ console.log(
   Textarea,
   renderTextarea,
   useTextarea,
+  TimePicker,
+  formatDateToTimeString,
+  getDateEndAnchor,
+  getDateFromTimeString,
+  getDateStartAnchor,
+  getTimesBetween,
+  renderTimePicker,
+  useTimePicker,
+  useTimePickerContextValues,
   Toast,
   ToastBody,
   ToastContainer,
