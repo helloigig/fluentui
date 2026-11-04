@@ -18,6 +18,7 @@ import {
   ChartHoverCard,
   formatScientificLimitWidth,
   getAccessibleDataObject,
+  getColorFromToken,
   getNextGradient,
 } from '../../utilities/index';
 import { FocusableTooltipText } from '../../utilities/FocusableTooltipText';
@@ -253,7 +254,7 @@ export class MultiStackedBarChartBase extends React.Component<IMultiStackedBarCh
 
     const bars = data.chartData!.map((point: IChartDataPoint, index: number) => {
       let startColor: string = point.color
-        ? point.color
+        ? getColorFromToken(point.color, this.props.theme?.isInverted)
         : point.placeHolder
         ? palette.neutralLight
         : defaultPalette[Math.floor(Math.random() * 4 + 1)];
@@ -504,7 +505,9 @@ export class MultiStackedBarChartBase extends React.Component<IMultiStackedBarCh
         const hideNumber = hideRatio[index] === undefined ? false : hideRatio[index];
         if (hideNumber) {
           validChartData!.forEach((point: IChartDataPoint, pointIndex: number) => {
-            let color: string = point.color ? point.color : defaultPalette[Math.floor(Math.random() * 4 + 1)];
+            let color: string = point.color
+              ? getColorFromToken(point.color, this.props.theme?.isInverted)
+              : defaultPalette[Math.floor(Math.random() * 4 + 1)];
             if (this.props.enableGradient) {
               color = point.gradient?.[0] || getNextGradient(pointIndex, 0, this.props.theme?.isInverted)[0];
             }
@@ -534,7 +537,9 @@ export class MultiStackedBarChartBase extends React.Component<IMultiStackedBarCh
         }
       } else {
         validChartData!.forEach((point: IChartDataPoint, pointIndex: number) => {
-          let color: string = point.color ? point.color : defaultPalette[Math.floor(Math.random() * 4 + 1)];
+          let color: string = point.color
+            ? getColorFromToken(point.color, this.props.theme?.isInverted)
+            : defaultPalette[Math.floor(Math.random() * 4 + 1)];
           if (this.props.enableGradient) {
             color = point.gradient?.[0] || getNextGradient(pointIndex, 0, this.props.theme?.isInverted)[0];
           }

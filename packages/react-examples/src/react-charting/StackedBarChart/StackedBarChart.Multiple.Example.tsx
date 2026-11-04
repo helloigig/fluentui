@@ -1,11 +1,5 @@
 import * as React from 'react';
-import {
-  StackedBarChart,
-  IChartDataPoint,
-  IChartProps,
-  DataVizPalette,
-  getColorFromToken,
-} from '@fluentui/react-charting';
+import { StackedBarChart, IChartDataPoint, IChartProps, DataVizPalette } from '@fluentui/react-charting';
 import { Toggle } from '@fluentui/react/lib/Toggle';
 import type { JSXElement } from '@fluentui/utilities';
 
@@ -25,14 +19,14 @@ export class StackedBarChartMultipleExample extends React.Component<{}, IStacked
 
   public render(): JSXElement {
     const points: IChartDataPoint[] = [
-      { legend: 'This is the first legend of the chart', data: 40, color: getColorFromToken(DataVizPalette.color3) },
-      { legend: 'This is the second legend of the chart', data: 23, color: getColorFromToken(DataVizPalette.color9) },
+      { legend: 'This is the first legend of the chart', data: 40, color: DataVizPalette.color3 },
+      { legend: 'This is the second legend of the chart', data: 23, color: DataVizPalette.color9 },
       {
         legend: 'This is the third legend of the chart',
         data: 35,
-        color: getColorFromToken(DataVizPalette.color6),
+        color: DataVizPalette.color6,
       },
-      { legend: 'This is the fourth legend of the chart', data: 87, color: getColorFromToken(DataVizPalette.color5) },
+      { legend: 'This is the fourth legend of the chart', data: 87, color: DataVizPalette.color5 },
     ];
     const chartTitle = 'Stacked bar chart 2nd example';
 

@@ -6,7 +6,7 @@ import { IAccessibilityProps, IChartDataPoint, IChartProps } from './index';
 import { IRefArrayData, IStackedBarChartProps, IStackedBarChartStyleProps, IStackedBarChartStyles } from '../../index';
 import { Callout, DirectionalHint } from '@fluentui/react/lib/Callout';
 import { FocusZone, FocusZoneDirection } from '@fluentui/react-focus';
-import { ChartHoverCard, getAccessibleDataObject, getNextGradient } from '../../utilities/index';
+import { ChartHoverCard, getAccessibleDataObject, getColorFromToken, getNextGradient } from '../../utilities/index';
 import { FocusableTooltipText } from '../../utilities/FocusableTooltipText';
 import { formatToLocaleString, isSafeUrl } from '@fluentui/chart-utilities';
 import type { JSXElement } from '@fluentui/utilities';
@@ -276,7 +276,9 @@ export class StackedBarChartBase extends React.Component<IStackedBarChartProps, 
     const scalingRatio = sumOfPercent !== 0 ? sumOfPercent / (100 - totalMarginPercent) : 1;
 
     const bars = data.chartData!.map((point: IChartDataPoint, index: number) => {
-      let startColor: string = point.color ? point.color : defaultPalette[Math.floor(Math.random() * 4 + 1)];
+      let startColor: string = point.color
+        ? getColorFromToken(point.color, this.props.theme?.isInverted)
+        : defaultPalette[Math.floor(Math.random() * 4 + 1)];
       let endColor: string = startColor;
       if (this.props.enableGradient) {
         startColor = point.gradient?.[0] || getNextGradient(index, 0, this.props.theme?.isInverted)[0];

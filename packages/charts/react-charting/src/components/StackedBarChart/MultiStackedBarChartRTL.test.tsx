@@ -13,6 +13,7 @@ import { DefaultPalette, ThemeProvider, resetIds } from '@fluentui/react';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { DarkTheme } from '@fluentui/theme-samples';
 import { MultiStackedBarChartBase } from './MultiStackedBarChart.base';
+import { DataVizPalette, getColorFromToken } from '../../utilities/colors';
 import { axe, toHaveNoViolations } from 'jest-axe';
 
 expect.extend(toHaveNoViolations);
@@ -407,5 +408,58 @@ describe('Multi Stacked Bar Chart - axe-core', () => {
       axeResults = await axe(container);
     });
     expect(axeResults).toHaveNoViolations();
+  });
+});
+
+describe('Multi Stacked bar chart - DataVizPalette tokens', () => {
+  beforeEach(sharedBeforeEach);
+
+  const tokenData: IChartProps[] = [
+    {
+      chartTitle: 'Monitored',
+      chartData: [
+        { legend: 'Phone numbers', data: 40, color: DataVizPalette.color11 },
+        { legend: 'Vehicle registration numbers', data: 1, color: DataVizPalette.color12 },
+        { legend: 'Driver license numbers', data: 23, color: DataVizPalette.color13 },
+      ],
+    },
+  ];
+
+  const getFills = (container: HTMLElement) => getById(container, /_MSBC_rect/i).map(rect => rect.getAttribute('fill'));
+
+  test('Should resolve palette tokens to the light theme colors', () => {
+    const { container } = render(<MultiStackedBarChart data={tokenData} />);
+    expect(getFills(container)).toEqual([
+      getColorFromToken(DataVizPalette.color11),
+      getColorFromToken(DataVizPalette.color12),
+      getColorFromToken(DataVizPalette.color13),
+    ]);
+  });
+
+  test('Should resolve palette tokens to the dark theme colors', () => {
+    const { container } = render(
+      <ThemeProvider theme={DarkTheme}>
+        <MultiStackedBarChart data={tokenData} />
+      </ThemeProvider>,
+    );
+    expect(getFills(container)).toEqual([
+      getColorFromToken(DataVizPalette.color11, true),
+      getColorFromToken(DataVizPalette.color12, true),
+      getColorFromToken(DataVizPalette.color13, true),
+    ]);
+  });
+
+  test('Should use the resolved dark theme color in the callout', async () => {
+    const { container } = render(
+      <ThemeProvider theme={DarkTheme}>
+        <MultiStackedBarChart data={tokenData} calloutProps={{ doNotLayer: true }} />
+      </ThemeProvider>,
+    );
+    fireEvent.mouseOver(getById(container, /_MSBC_rect/i)[1]);
+    await waitFor(() => {
+      expect(getByClass(container, /calloutBlockContainer/i)[0]).toHaveStyle(
+        `border-left: 4px solid ${getColorFromToken(DataVizPalette.color12, true)}`,
+      );
+    });
   });
 });

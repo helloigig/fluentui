@@ -1,11 +1,5 @@
 import * as React from 'react';
-import {
-  StackedBarChart,
-  IChartProps,
-  IChartDataPoint,
-  DataVizPalette,
-  getColorFromToken,
-} from '@fluentui/react-charting';
+import { StackedBarChart, IChartProps, IChartDataPoint, DataVizPalette } from '@fluentui/react-charting';
 import { Checkbox } from '@fluentui/react';
 import { Toggle } from '@fluentui/react/lib/Toggle';
 import type { JSXElement } from '@fluentui/utilities';
@@ -30,11 +24,11 @@ export class StackedBarChartBasicExample extends React.Component<{}, IStackedBar
       {
         legend: 'first',
         data: 3000000,
-        color: getColorFromToken(DataVizPalette.color1),
+        color: DataVizPalette.color1,
         xAxisCalloutData: '2020/04/30',
         yAxisCalloutData: '99%',
       },
-      { legend: 'second', data: 1, color: getColorFromToken(DataVizPalette.color5) },
+      { legend: 'second', data: 1, color: DataVizPalette.color5 },
     ];
 
     const data0: IChartProps = {

@@ -1,0 +1,6 @@
+{
+  "type": "patch",
+  "comment": "fix: resolve DataVizPalette tokens for the active theme in StackedBarChart and MultiStackedBarChart",
+  "packageName": "@fluentui/react-charting",
+  "email": "wuyuqi827@gmail.com"
+}
