@@ -114,9 +114,9 @@ export class StackedBarChartBase extends React.Component<IStackedBarChartProps, 
       this._classNames = getClassNames(this.props.styles!, {
         legendColor: this.state.color,
         theme: this.props.theme!,
-        benchmarkColor: benchmarkData ? benchmarkData.color : '',
+        benchmarkColor: benchmarkData ? getColorFromToken(benchmarkData.color!, this.props.theme?.isInverted) : '',
         benchmarkRatio,
-        targetColor: targetData ? targetData.color : '',
+        targetColor: targetData ? getColorFromToken(targetData.color!, this.props.theme?.isInverted) : '',
         targetRatio,
         showTriangle: !!(benchmarkData || targetData),
       });
@@ -431,7 +431,7 @@ export class StackedBarChartBase extends React.Component<IStackedBarChartProps, 
     if (data) {
       const legend: ILegend = {
         title: data.legend!,
-        color: data.color!,
+        color: getColorFromToken(data.color!, this.props.theme?.isInverted),
         shape: 'triangle',
       };
       legendDataItems.push(legend);

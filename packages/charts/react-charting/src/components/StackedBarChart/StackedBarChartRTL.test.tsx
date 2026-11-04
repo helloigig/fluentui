@@ -457,6 +457,24 @@ describe('Stacked bar chart - DataVizPalette tokens', () => {
     ]);
   });
 
+  test('Should resolve palette tokens for benchmark and target in the dark theme', () => {
+    const benchmarkData = { legend: 'Benchmark', data: 30, color: DataVizPalette.color14 };
+    const targetData = { legend: 'Target', data: 50, color: DataVizPalette.color15 };
+    const { container } = render(
+      <ThemeProvider theme={DarkTheme}>
+        <StackedBarChart data={tokenData} benchmarkData={benchmarkData} targetData={targetData} />
+      </ThemeProvider>,
+    );
+    const benchmarkColor = getColorFromToken(DataVizPalette.color14, true);
+    const targetColor = getColorFromToken(DataVizPalette.color15, true);
+    // Triangles above the bar
+    expect(container.querySelector('[class*="benchmark-"]')).toHaveStyle(`border-top-color: ${benchmarkColor}`);
+    expect(container.querySelector('[class*="target-"]')).toHaveStyle(`border-top-color: ${targetColor}`);
+    // Triangle legends
+    expect(container.querySelectorAll(`path[fill="${benchmarkColor}"]`)).toHaveLength(1);
+    expect(container.querySelectorAll(`path[fill="${targetColor}"]`)).toHaveLength(1);
+  });
+
   test('Should use the resolved dark theme color in the callout', async () => {
     const { container } = render(
       <ThemeProvider theme={DarkTheme}>
